@@ -1,2 +1,2 @@
 # cerberus-document-editor
-Document Editor by Cerberus Schema (Urwid)
+Document Editor for Cerberus Schema (Urwid)

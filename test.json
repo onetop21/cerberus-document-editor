@@ -1,0 +1,27 @@
+{
+  "kind": "Train",
+  "apiVersion": "v1",
+  "name": "test-abasdf-a",
+  "version": "0.0.1",
+  "maintainer": "codespace",
+  "workdir": ".",
+  "workspace": {
+    "kind": "Workspace",
+    "env": {
+      "PYTHONUNBUFFERED": "1",
+      "test test": "aaa",
+      "hello-world": "bbb"
+    },
+    "ignores": [
+      "**/.*"
+    ],
+    "preps": []
+  },
+  "app": {
+    "asdf": {
+      "kind": "Job",
+      "restartPolicy": "never",
+      "scale": "123"
+    }
+  }
+}

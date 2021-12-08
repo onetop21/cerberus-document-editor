@@ -1,0 +1,58 @@
+
+############################
+# MLAppDeploy Project v0.2 #
+############################
+# kind: Project
+# <<: *metadata
+# workspace:
+#   #<<: *dockerfile
+#   kind: Dockerfile
+#   filePath: .
+# ingress:
+#   TEST_INGRESS:
+#     target: test:1234
+# app:
+# #  test1: *comp
+#   test2: *app
+#   test3: *job
+#   test4: *service
+#   #test-x: *app
+
+# app:
+#   server:
+#     kind: Job
+#     command: python server.py
+#     ports: [5555]
+#     resources:
+#       limits:
+#         xpu: 1
+
+# kind: Component
+# <<: *metadata
+# app:
+#   server:
+#     kind: Component
+#     command: python server.py
+#     ports: [5555]
+#     test: hello?
+
+kind: Train
+apiVersion: v1                     # Describe api version. (*v1)
+maintainer: root                   # Describe maintainer. (*env.USER)
+name: test-name                    # Describe project name.
+version: 0.0.2                     # Describe verison. (*1.0.0)
+workdir: .
+workspace:
+    kind: Workspace                # Describe kind of workspace. (*Workspace, Dockerfile)
+    base: python:latest            # Describe base docker image tag.
+    preps:
+      - pip: requirements.txt      # [OPTIONAL] Describe prepare options for run.
+app:
+    server_test:
+        kind: Service              # [OPTIONAL] Describe kind of app. (*App, Job, Service)
+        command: python server.py  # [OPTIONAL] Describe command to need overwrite.
+        ports: [5555]              # [OPTIONAL] Describe expose ports to other apps.
+    client:
+        kind: Job
+        command: python client.py
+        ports: [5555]
