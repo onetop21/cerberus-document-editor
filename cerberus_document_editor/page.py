@@ -54,15 +54,20 @@ class Page(metaclass=ABCMeta):
     def __repr__(self):
         return json.dumps(self.__data)
 
-    def register_keymap(self, k, desc, callback):
+    def register_keymap(self, k, desc, callback, enabled=True):
         self.__keymap[k] = {
             'description': desc,
-            'callback': callback
+            'callback': callback,
+            'enabled': enabled
         }
     
     def unregister_keymap(self, k):
         if k in self.__keymap:
             del self.__keymap[k]
+
+    def set_keymap(self, k, enable=True):
+        if k in self.__keymap:
+            self.__keymap[k]['enabled'] = enable
 
     def next(self, page):
         self.__hwnd.push(page)
@@ -74,10 +79,7 @@ class Page(metaclass=ABCMeta):
         self.__hwnd.redraw()
 
     def warning(self, message=None):
-        if message:
-            self.hwnd.enable_warning(message)
-        else:
-            self.hwnd.disable_warning()
+        self.hwnd.set_indicator(message)
 
     def on_change_focus(self):
         self.warning()
@@ -110,7 +112,7 @@ class EditorPage(Page):
         }
 
         if sub_page:
-            self.register_keymap('ctrl left', 'Ctrl+Left : Back', lambda page: page.close())
+            self.register_keymap('ctrl left', 'Back', lambda page: page.close())
     
     def __repr__(self):
         return json.dumps(self.json.get('document', {}))
@@ -194,6 +196,7 @@ class EditorPage(Page):
                     body = self.json
                     body['document'][key] = None
                     self.json = body
+                    self.hwnd.modified()
                 self.render()
             elif page.json.get('exit', None) is not None:
                 key = page.json.get('exit')
@@ -213,8 +216,9 @@ class EditorPage(Page):
                     document[page.name] = dict(filter(lambda x: x[1] is not None, page.json['document'].items()))
                 else:
                     document[page.name] = page.json['document']
-                log(data)
-                self.json = data
+                if self.json != data:
+                    self.json = data
+                    self.hwnd.modified()
                 self.render()
 
     def on_change(self, widget, new_value):
@@ -230,7 +234,9 @@ class EditorPage(Page):
                 document[key] = new_value
                 validator = Validator(schema, purge_unknown=True)
                 data['document'] = validator.normalized_by_order(document)
-                self.json = data
+                if self.json != data:
+                    self.json = data
+                    self.hwnd.modified()
                 self.render()
         else:
             data = self.json
@@ -265,7 +271,9 @@ class EditorPage(Page):
                 self.warning()
                 document[key] = new_value
 
-            self.json = data
+            if self.json != data:
+                self.json = data
+                self.hwnd.modified()
 
     def on_update(self):
         doc = self.json['document']
@@ -297,7 +305,7 @@ class EditorPage(Page):
                     }
                 }
                 self.next(PopupPage("Add new item", background=self.on_draw(), schema=schema))
-            self.register_keymap('ctrl n', 'Ctrl+N : Add new item', callback)
+            self.register_keymap('ctrl n', 'Add new item', callback)
         elif is_list:
             log('Doc is', self.json['document'])
             def callback(self):
@@ -318,7 +326,7 @@ class EditorPage(Page):
                 self.json = data
                 log('after', document)
                 self.render()
-            self.register_keymap('ctrl n', 'Ctrl+N : Add new item', callback)
+            self.register_keymap('ctrl n', 'Add new item', callback)
         else:
             appendable_items = []
             for k in schema:
@@ -327,7 +335,7 @@ class EditorPage(Page):
             if appendable_items:
                 def callback(self):
                     self.next(PopupPage("Add new item", background=self.on_draw(), dtype='option', items=appendable_items))
-                self.register_keymap('ctrl n', 'Ctrl+N : Add new item', callback)
+                self.register_keymap('ctrl n', 'Add new item', callback)
             else:
                 self.unregister_keymap('ctrl n')
 
@@ -346,12 +354,12 @@ class EditorPage(Page):
                     else:
                         self.hwnd.enable_warning("Cannot not remove immutable item(required or default item).")
             if is_list:
-                self.register_keymap('ctrl d', 'Ctrl+D : Delete item', delete_callback)
+                self.register_keymap('ctrl d', 'Delete item', delete_callback)
             else:
                 for k, v in schema.items():
                     if not v.get('required', False) and not v.get('default', None):
                         deletable_items.append(k)
-                self.register_keymap('ctrl d', 'Ctrl+D : Delete item', delete_callback)
+                self.register_keymap('ctrl d', 'Delete item', delete_callback)
 
         def ellipsis(text, max_w=60, max_h=10):
             def cols(rows):
@@ -465,7 +473,6 @@ class EditorPage(Page):
                 raise e
 
     def on_close(self):
-        log('Test')
         self.next(PopupPage("Exit with Save", return_key='exit', background=self.on_draw(), dtype='option', items=['Yes', 'No', 'Cancel']))
         return True
 
@@ -492,8 +499,8 @@ class PopupPage(Page):
                 self.add_item(Widget.button(None, item, lambda x: self.on_choose(x.label), colorschemes=('label', 'focus')))
         else:
             raise RuntimeError(f'Not Supported type. [{dtype}]')
-        self.register_keymap('esc', 'Esc : Cancel', lambda page: page.on_cancel())
-        self.register_keymap('enter', 'Enter : Add', lambda page: page.on_apply())
+        self.register_keymap('esc', 'Cancel', lambda page: page.on_cancel())
+        self.register_keymap('enter', 'Add', lambda page: page.on_apply())
 
     def add_item(self, widget):
         log(widget)

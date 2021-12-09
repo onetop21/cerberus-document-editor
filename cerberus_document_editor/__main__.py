@@ -45,20 +45,7 @@ if __name__ == '__main__':
     else:
         document = {}
 
-    app = cde.MainWindow(APP_NAME,
-        palette=[
-            ('header','white,bold', 'black', 'bold'),
-            ('footer','white,bold', 'black', 'bold'),
-            ('body','white', 'dark gray', ''),
-            ('label','white,bold', 'dark gray', 'bold'),
-            ('description','yellow,bold', 'dark gray'),
-            ('edit', 'white', 'dark gray'),
-            ('combo', 'light gray', 'black'),
-            ('focus', 'black', 'white', 'bold'),
-            ('warn', 'black', 'light red', 'bold'),
-            ('stat', 'dark red,bold', 'dark gray'),
-        ]
-    )
+    app = cde.MainWindow(APP_NAME, pagestack=True)
     modified = app.run(cde.EditorPage(os.path.basename(args.document), schema, document))
     if modified:
         with open(args.document, 'wt') as f:
