@@ -1,5 +1,5 @@
 Cerberus-Document-Editor
-=================
+========================
 
 Document Editor for Cerberus Schema.
 
