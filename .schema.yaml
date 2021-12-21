@@ -3,7 +3,7 @@ x-definitions:
   - definition: &metadata
       apiVersion: 
         type: string
-        regex: "v[0-9]+"
+        regex: "^v[0-9]+$"
         default: v1
         order: 0
       name: 
@@ -16,7 +16,7 @@ x-definitions:
         multiline: True
       version: 
         type: string
-        regex: "[0-9]+\\.[0-9]+\\.[0-9]+"
+        regex: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
         default: 0.0.1
         order: 2
       maintainer:
@@ -30,7 +30,7 @@ x-definitions:
   - definition: &workspace
       base:                       # Describe base docker image tag
         type: string
-        regex: "(?:.+/)?([^:]+)(?::.+)?"
+        regex: "^(?:.+/)?([^:]+)(?::.+)?$"
         required: true
       preps:                      # Describe preparations for making envorinment.
         type: list
@@ -98,7 +98,7 @@ x-definitions:
   - definition: &component
       image:                      # Describe image to run docker service for run not built image from workspace.
         type: string
-        regex: "(?:.+/)?([^:]+)(?::.+)?"
+        regex: "^(?:.+/)?([^:]+)(?::.+)?$"
       env:                        # Describe environment variables additionaly.
         type: dict
       ports:                      # Describe expose ports to other services.
@@ -113,7 +113,7 @@ x-definitions:
         type: list
         schema:
           type: string
-          regex: "[A-Za-z0-9-_]+:/\\w+"
+          regex: "^[A-Za-z0-9-_]+:/\\w+$"
         #- ${datastore:URL}:/storage
   - definition: &_app_base
       <<: *component
@@ -133,11 +133,13 @@ x-definitions:
         excludes: runSpec
       scale:                      # Describe number of replicas or parallelism
         type: integer
+        description: Describe number of replicas or parallelism
         default: 1
         excludes: runSpec
       quota:                      # Describe required system resource quota.
         type: dict
         excludes: resources
+        description: Describe required system resource quota.
         schema:
           cpu:
             type: number
@@ -145,7 +147,7 @@ x-definitions:
             type: integer
           mem:
             type: string
-            regex: "[0-9]+[GMK]?[i]?"
+            regex: "^[0-9]+[GMK]?[i]?$"
   - definition: &job
       <<: *app
       restartPolicy:
@@ -176,7 +178,7 @@ x-definitions:
                 type: integer
               mem:
                 type: string
-                regex: "[0-9]+[GMK]?[i]?"
+                regex: "^[0-9]+[GMK]?[i]?$"
           requests:
             type: dict
             schema:
@@ -186,7 +188,7 @@ x-definitions:
                 type: integer
               mem:
                 type: string
-                regex: "[0-9]+[GMK]?[i]?"
+                regex: "^[0-9]+[GMK]?[i]?$"
   - definition: &job_advanced
       <<: *_app_base
       <<: *_advanced_base

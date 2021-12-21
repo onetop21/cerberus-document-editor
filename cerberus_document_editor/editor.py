@@ -86,6 +86,7 @@ class MainWindow:
         self.__view.set_header(urwid.AttrWrap(self.__header, 'header'))
         
     def set_indicator(self, message=None):
+        log('indicotor', message)
         if message:
             self.__footer = urwid.Pile([urwid.AttrWrap(urwid.Text(message), "indicator"), self.__footer_keymap])
         else:

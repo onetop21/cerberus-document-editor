@@ -155,6 +155,10 @@ class Widget:
         return widget
 
     @staticmethod
+    def hash(widget):
+        return hash(Widget.unwrap_widget(widget))
+
+    @staticmethod
     def divider(char=" ", top=0, bottom=0):
         return urwid.Divider(char, top, bottom)
     @staticmethod
@@ -175,14 +179,27 @@ class Widget:
             widget = urwid.AttrWrap(urwid.IntEdit(default=default), *colorschemes)
             return Widget._wrap_widget(widget, label)
         @staticmethod
-        def number(label=None, default=0., colorschemes=('edit', 'focus')):
-            widget = urwid.AttrWrap(FloatEdit(default=default), *colorschemes)
+        def number(label=None, default=.0, colorschemes=('edit', 'focus')):
+            widget = urwid.AttrWrap(FloatEdit(default=str(default)), *colorschemes)
             return Widget._wrap_widget(widget, label)
 
     def dropdown(label=None, items=[], default=0, on_state_change=None, colorschemes=('edit', 'focus')):
         widget = urwid.AttrWrap(ComboBox(items, default, on_state_change), *colorschemes)
         return Widget._wrap_widget(widget, label)
 
-    def button(label=None, text="", callback=None, colorschemes=('edit', 'focus')):
-        widget = urwid.AttrWrap(FlatButton(text, callback), *colorschemes)
+    def button(label=None, text="", callback=None, colorschemes=('edit', 'focus'), comment=None):
+        if comment:
+            widget = urwid.AttrWrap(
+                urwid.Columns([
+                    ('weight', 1, FlatButton(text, callback)),
+                    #('pack', urwid.AttrWrap(urwid.Text(f'# {comment}', align=urwid.RIGHT), 'description'))
+                    ('pack', urwid.Text(f'# {comment}', align=urwid.RIGHT))
+                ], dividechars=1, min_width=20), 
+            *colorschemes)
+        else:
+            widget = urwid.AttrWrap(FlatButton(text, callback), *colorschemes)
+        return Widget._wrap_widget(widget, label, annotation='')
+
+    def group(label=None):
+        widget = urwid.ListBox()
         return Widget._wrap_widget(widget, label, annotation='')
