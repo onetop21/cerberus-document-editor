@@ -1,6 +1,8 @@
 # cerberus-document-editor
 Document Editor for Cerberus Schema (Urwid)
 
+[![Upload Python Package](https://github.com/onetop21/cerberus-document-editor/actions/workflows/python-publish.yml/badge.svg?branch=main)](https://github.com/onetop21/cerberus-document-editor/actions/workflows/python-publish.yml)
+
 ## How to install
 ```bash
 pip install cerberus-document-editor
