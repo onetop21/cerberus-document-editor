@@ -2,8 +2,8 @@ import sys
 import os
 import argparse
 import json
-import yaml_parser
 import cerberus_document_editor as cde
+from cerberus_document_editor import yaml_parser
 
 APP_NAME = 'Cerberus Document Editor'
 DESCRIPTION='Document Editor for Cerberus Schema.'

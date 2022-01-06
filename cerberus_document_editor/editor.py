@@ -2,7 +2,7 @@ import urwid
 import json
 from interrupt_handler import InterruptHandler
 
-from debug import log
+from .debug import log
 
 DEFAULT_PALETTE=[
     ('header','white,bold', 'black', 'bold'),

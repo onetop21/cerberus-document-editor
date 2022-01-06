@@ -1,8 +1,8 @@
 import warnings
 import cerberus_kind
 import json
-from pprint import pprint
 import inspect
+from pprint import pprint
 warnings.simplefilter("ignore", UserWarning)
         
 class Validator(cerberus_kind.Validator):

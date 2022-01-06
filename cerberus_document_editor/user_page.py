@@ -1,17 +1,12 @@
-import sys
 import urwid
 import json
 import re
-import yaml_parser
-from abc import ABCMeta, abstractmethod
+from cerberus_document_editor import yaml_parser
 from collections import OrderedDict
-from collections.abc import Iterable
-from validator import Validator
-from widget import Widget, FlatButton
-from page import ListPage, PopupPage
-from model import ObjectModel
-
-from debug import log
+from .validator import Validator
+from .widget import Widget, FlatButton
+from .page import ListPage, PopupPage
+from .debug import log
 
 def cerberus_error(errors, with_path=False):
     def get_message(errors, stack=[]):

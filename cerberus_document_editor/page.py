@@ -1,15 +1,10 @@
 import urwid
 import json
-import re
-import yaml_parser
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
-from collections.abc import Iterable
-from validator import Validator
-from widget import Widget, FlatButton
-from model import ObjectModel
 
-from debug import log
+from .validator import Validator
+from .widget import Widget, FlatButton
+from .debug import log
 
 # Page
 # -- JSON Data

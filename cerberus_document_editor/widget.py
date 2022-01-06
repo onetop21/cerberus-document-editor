@@ -1,7 +1,7 @@
 import urwid
 from urwid.numedit import FloatEdit
 
-from debug import log
+from .debug import log
 
 ## Ref from https://github.com/rbistolfi/urwid-combobox
 class ComboBox(urwid.PopUpLauncher):
