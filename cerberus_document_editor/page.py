@@ -209,15 +209,13 @@ class PopupPage(Page):
         self.register_keymap('enter', 'Add', lambda page: page.on_apply())
 
     def add_item(self, widget, signal=None, callback=None):
-        log(widget)
         ignore_react_list = [
             urwid.Text, FlatButton, urwid.Divider
         ]
         self.listbox_contents.append(widget)
         inner_widget = Widget.unwrap_widget(widget)
-        if signal:
-            if not type(inner_widget) in ignore_react_list:
-                signal = urwid.connect_signal(inner_widget, 'change', self.on_change)
+        if not type(inner_widget) in ignore_react_list:
+            signal = urwid.connect_signal(inner_widget, 'change', self.on_change)
         return inner_widget
    
     def clear_items(self):
