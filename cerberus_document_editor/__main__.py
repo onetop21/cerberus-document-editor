@@ -16,9 +16,8 @@ def exit_with_message(message, exitcode=1):
     print(message, file=sys.stderr)
     sys.exit(exitcode)
 
-if __name__ == '__main__':
+def main():
     args = parser.parse_args()
-
     if not os.path.exists(args.schema):
         exit_with_message('Cannot find schema file. [args.schema]')
     schema_ext = os.path.splitext(args.schema)[1]
@@ -55,3 +54,6 @@ if __name__ == '__main__':
                 f.write(json.dumps(modified, indent=2))
             else:
                 print(f'Cannot support file format.', file=sys.stderr)
+
+if __name__ == '__main__':
+    main()
