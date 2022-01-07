@@ -34,6 +34,7 @@ class EditorPage(ListPage):
     def __init__(self, name, schema, document, sub_page=False):
         super().__init__(name, sub_page=sub_page)
         self.widget_map = {}
+        log(f'Schema: {schema}')
         validator = Validator(schema, purge_unknown=True)
         self.json = {
             'document': validator.normalized_by_order(document) or document,
@@ -155,8 +156,10 @@ class EditorPage(ListPage):
                 schema = dict([(key, schema['valuesrules']) for key in doc])
             elif schema.get('type') == 'list':
                 is_list = True
-            else:                
+            elif 'schema' in schema:                
                 schema = schema['schema']
+            else:
+                schema = {}
 
         if valuesrules:
             def callback(self):
@@ -252,7 +255,9 @@ class EditorPage(ListPage):
                         True,
                     )
                 except KeyError as e:
-                    del doc['kind']
+                    log(doc)
+                    if 'kind' in doc:
+                        del doc['kind']
                     page = EditorPage(
                         name, 
                         json.loads(json.dumps(schema)), # deepcopy
@@ -310,6 +315,7 @@ class EditorPage(ListPage):
                     self.widget_map[hash(widget)] = key
                 elif dtype in ['dict']:                 # Object
                     value = value or {}
+                    log("sub_schema", sub_schema)
                     if 'valuesrules' in sub_schema:
                         widget = self.add_column_object(key, desc, text=ellipsis(yaml_parser.dump(value)),
                             callback=callback_generator(
@@ -341,7 +347,7 @@ class EditorPage(ListPage):
                         widget = self.add_column_object(key, desc, text=ellipsis(yaml_parser.dump(value)), 
                             callback=callback_generator(
                                 key,
-                                {'type': 'dict'}, 
+                                {'__root__': {'type': 'dict', 'valuesrules': {'type': 'string'}}}, 
                                 value
                             )
                         )

@@ -104,15 +104,12 @@ class ListPage(Page):
             self.register_keymap('ctrl left', 'Back', lambda page: page.close())
     
     def add_column_number(self, label, desc=None, value=0.):
-        log('add_column_number')
         return self.add_item(Widget.Edit.number(label, value), desc)
 
     def add_column_integer(self, label, desc=None, value=0):
-        log('add_column_integer')
         return self.add_item(Widget.Edit.integer(label, value), desc)
 
     def add_column_str(self, label, desc=None, value=None, multiline=False):
-        log('add_column_str')
         return self.add_item(Widget.Edit.text(label, value, multiline), desc)
 
     def add_column_object(self, label, desc=None, text='More...', callback=None):
