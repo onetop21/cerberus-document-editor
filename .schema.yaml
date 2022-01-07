@@ -39,6 +39,7 @@ x-definitions:
           schema:
             run: 
               type: string
+              multiline: true
             add:
               type: string
             pip:

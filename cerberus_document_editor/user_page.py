@@ -18,7 +18,7 @@ def cerberus_error(errors, with_path=False):
                 message.append(f"{errors}")
         elif isinstance(errors, dict):
             for k, v in errors.items():
-                stack.append(k)
+                stack.append(str(k))
                 message += get_message(v, stack)
                 stack.pop(-1)
         elif isinstance(errors, list):
@@ -255,7 +255,6 @@ class EditorPage(ListPage):
                         True,
                     )
                 except KeyError as e:
-                    log(doc)
                     if 'kind' in doc:
                         del doc['kind']
                     page = EditorPage(
@@ -315,7 +314,6 @@ class EditorPage(ListPage):
                     self.widget_map[hash(widget)] = key
                 elif dtype in ['dict']:                 # Object
                     value = value or {}
-                    log("sub_schema", sub_schema)
                     if 'valuesrules' in sub_schema:
                         widget = self.add_column_object(key, desc, text=ellipsis(yaml_parser.dump(value)),
                             callback=callback_generator(
