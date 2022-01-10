@@ -47,13 +47,14 @@ def main():
     app = cde.MainWindow(APP_NAME, pagestack=True)
     modified = app.run(cde.EditorPage(os.path.basename(args.document), schema, document))
     if modified:
-        with open(args.document, 'wt') as f:
-            if doc_ext in ['.yaml', 'yml']:
-                f.write(yaml_parser.dump(modified))
-            elif doc_ext in ['.json']:
-                f.write(json.dumps(modified, indent=2))
-            else:
-                print(f'Cannot support file format.', file=sys.stderr)
+        if doc_ext in ['.yaml', '.yml', '.json']:
+            with open(args.document, 'wt') as f:
+                if doc_ext in ['.yaml', '.yml']:
+                    f.write(yaml_parser.dump(modified))
+                elif doc_ext in ['.json']:
+                    f.write(json.dumps(modified, indent=2))
+        else:
+            print(f'Cannot support file format.', file=sys.stderr)
 
 if __name__ == '__main__':
     main()
