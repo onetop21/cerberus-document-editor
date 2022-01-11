@@ -3,10 +3,14 @@ import json
 import re
 from cerberus_document_editor import yaml_parser
 from collections import OrderedDict
+from distutils.util import strtobool
 from .validator import Validator
 from .widget import Widget, FlatButton
 from .page import ListPage, PopupPage
 from .debug import log
+
+def BOOLEAN(x):
+    return bool(strtobool(x))
 
 def cerberus_error(errors, with_path=False):
     def get_message(errors, stack=[]):
@@ -34,7 +38,7 @@ class EditorPage(ListPage):
     def __init__(self, name, schema, document, sub_page=False):
         super().__init__(name, sub_page=sub_page)
         self.widget_map = {}
-        log(f'Schema: {schema}')
+        log(f'Schema: {schema}', 'Document: ', document)
         validator = Validator(schema, purge_unknown=True)
         self.json = {
             'document': validator.normalized_by_order(document) or document,
@@ -103,6 +107,17 @@ class EditorPage(ListPage):
                     self.hwnd.modified()
                 self.render()
         else:
+            type_pattern = re.compile(r'^T__([A-Z]+)_(.*)__$')
+            matched = type_pattern.match(str(key))
+            if matched:
+                cast_type = matched.group(1)
+                try:
+                    cast_func = eval(f"lambda x: {cast_type}(x)")
+                    new_value = cast_func(new_value)
+                except:
+                    ...
+                key = matched.group(2)
+
             data = self.json
             document = data['document']
             schema = data['schema']
@@ -302,6 +317,13 @@ class EditorPage(ListPage):
                     value = value or ""
                     widget = self.add_column_str(key, desc, value, sub_schema.get('multiline', False))
                     self.widget_map[hash(widget)] = key
+                elif dtype in ['boolean']:
+                    allowed_list = [True, False]
+                    widget = self.add_column_dropdown(key, desc, 
+                        allowed_list,
+                        doc[key] if doc[key] in allowed_list else allowed_list[0]
+                    )
+                    self.widget_map[hash(widget)] = f'T__BOOLEAN_{key}__'
                 elif dtype in ['list']:
                     value = value or []
                     widget = self.add_column_object(key, desc, text=ellipsis(yaml_parser.dump(value)),

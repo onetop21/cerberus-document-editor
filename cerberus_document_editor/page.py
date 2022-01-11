@@ -116,7 +116,7 @@ class ListPage(Page):
         return self.add_item(Widget.button(label, text, callback or (lambda x: None)), desc)
 
     def add_column_dropdown(self, label, desc=None, items=[], default=None):
-        return self.add_item(Widget.dropdown(label, items, items.index(default)) if default else 0, desc)
+        return self.add_item(Widget.dropdown(label, items, items.index(default) if default is not None else 0), desc)
 
     def add_column_group(self, label, desc=None):
         return self.add_item(Widget.group(label), desc)
