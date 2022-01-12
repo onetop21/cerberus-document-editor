@@ -1,9 +1,10 @@
 import urwid
 import json
 import re
-from cerberus_document_editor import yaml_parser
 from collections import OrderedDict
 from distutils.util import strtobool
+from cerberus_kind.utils import parse_error
+from cerberus_document_editor import yaml_parser
 from .validator import Validator
 from .widget import Widget, FlatButton
 from .page import ListPage, PopupPage
@@ -11,28 +12,6 @@ from .debug import log
 
 def BOOLEAN(x):
     return bool(strtobool(x))
-
-def cerberus_error(errors, with_path=False):
-    def get_message(errors, stack=[]):
-        message = []
-        if isinstance(errors, str):
-            if with_path:
-                message.append(f"{'.'.join(filter(None, stack))}: {errors}")
-            else:
-                message.append(f"{errors}")
-        elif isinstance(errors, dict):
-            for k, v in errors.items():
-                stack.append(str(k))
-                message += get_message(v, stack)
-                stack.pop(-1)
-        elif isinstance(errors, list):
-            for item in errors:
-                message += get_message(item, stack)
-        return message
-    if '__root__' in errors:
-        return ', '.join(get_message(errors['__root__']))
-    else:
-        return ', '.join(get_message(errors))
 
 class EditorPage(ListPage):
     def __init__(self, name, schema, document, sub_page=False):
@@ -372,7 +351,7 @@ class EditorPage(ListPage):
             validator = Validator({'__root__': schema})
         
         if not validator.validate(doc):
-            self.warning(cerberus_error(validator.errors, with_path=True))
+            self.warning(parse_error(validator.errors, with_path=True))
 
     def on_close(self):
         self.next(PopupPage("Exit with Save", return_key='exit', background=self.on_draw(), ptype='select', items=['Yes', 'No', 'Cancel']))
