@@ -1,3 +1,6 @@
+import sys
+import time
+import threading
 import urwid
 import json
 from interrupt_handler import InterruptHandler
@@ -86,11 +89,23 @@ class MainWindow:
         self.__view.set_header(urwid.AttrWrap(self.__header, 'header'))
         
     def set_indicator(self, message=None):
+        if not hasattr(self, 'loop'):
+            def pending_job():
+                while not hasattr(self, 'loop'): time.sleep(0.001)
+                self.set_indicator(message)
+            threading.Thread(target=pending_job, daemon=True).start()
+            return
+
         if message:
-            self.__footer = urwid.Pile([urwid.AttrWrap(urwid.Text(message), "indicator"), self.__footer_keymap])
-        else:
+            self.__footer = urwid.Pile([urwid.AttrWrap(urwid.Text(message, wrap='ellipsis'), "indicator"), self.__footer_keymap])
+            self.indicate_tick = time.time()
+        elif len(self.__footer.widget_list) > 1:
+            if self.indicate_tick + 0.01 > time.time():
+                return # Block frequently undrawing command.
             self.__footer = urwid.Pile([self.__footer_keymap])
-        self.__view.set_footer(urwid.AttrWrap(self.__footer, 'footer'))
+        else:
+            return  # Not changed
+        self.loop.set_alarm_in(0, lambda ctx, user_data: self.__view.set_footer(urwid.AttrWrap(self.__footer, 'footer')))
 
     def push(self, page):
         page.hwnd = self
@@ -143,6 +158,16 @@ class MainWindow:
         with InterruptHandler(lambda: True):
             self.loop = urwid.MainLoop(self.__view, self.palette,
                 unhandled_input=self.input_handler, pop_ups=True)
-            self.loop.run()
+            while True:
+                try:
+                    self.loop.run()
+                    break
+                except AssertionError as e:
+                    if "rows, render mismatch" in e.args:
+                        print('Assert in Loop', file=sys.stderr)
+                    else:
+                        raise e
+                except Exception as e:
+                    raise e
         if getattr(self, 'save_exit'):
             return self.front_page

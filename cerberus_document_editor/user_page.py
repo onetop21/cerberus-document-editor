@@ -122,19 +122,14 @@ class EditorPage(ListPage):
             document = data['document']
             schema = data['schema']
 
-            # # 여기서 validate하면 좋을 듯??!
-            # if '__root__' in schema:
-            #     schema = schema['__root__']
-            #     if schema.get('selector'):
-            #         selectable_kinds = [_.title() for _ in schema['selector']]
-            #         schema = schema['selector'][document['kind'].lower()]
-            #     elif schema.get('valuesrules'):
-            #         valuesrules = schema
-            #         schema = dict([(key, schema['valuesrules']) for key in document])
-            #     elif schema.get('type') == 'list':
-            #         is_list = True
-            #     else:                
-            #         schema = schema['schema']
+            if '__root__' in schema:
+                schema = schema['__root__']
+                if schema.get('selector'):
+                    schema = schema['selector'][document['kind'].lower()]
+                elif schema.get('valuesrules'):
+                    schema = dict([(key, schema['valuesrules']) for key in document])
+                else:                
+                    schema = schema['schema']
             
             show_warning = False
             item_schema = schema.get(key)
@@ -193,7 +188,6 @@ class EditorPage(ListPage):
                 data = self.json
                 document = data['document']
                 sub_type = schema['schema']['type']
-                log('before', document)
                 if sub_type in ['string']:
                     document.append("")
                 elif sub_type in ['integer']:
@@ -202,10 +196,8 @@ class EditorPage(ListPage):
                     document.append(.0)
                 elif sub_type in ['list', 'dict']:
                     validator = Validator({'__root__': schema['schema']})
-                    log({'__root__': schema['schema']})
                     document.append(validator.normalized())
                 self.json = data
-                log('after', document)
                 self.render()
             self.register_keymap('ctrl n', 'Add new item', callback)
         else:
@@ -230,7 +222,6 @@ class EditorPage(ListPage):
                     key = self.widget_map[hash(Widget.unwrap_widget(widget))]
                     if key in deletable_items:
                         data = self.json
-                        log(key, type(key))
                         document = data['document']
                         del document[key]
                         self.json = data
@@ -379,6 +370,7 @@ class EditorPage(ListPage):
             validator = Validator(schema)
         except:
             validator = Validator({'__root__': schema})
+        
         if not validator.validate(doc):
             self.warning(cerberus_error(validator.errors, with_path=True))
 
