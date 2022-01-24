@@ -89,13 +89,6 @@ class MainWindow:
         self.__view.set_header(urwid.AttrWrap(self.__header, 'header'))
         
     def set_indicator(self, message=None):
-        if not hasattr(self, 'loop'):
-            def pending_job():
-                while not hasattr(self, 'loop'): time.sleep(0.001)
-                self.set_indicator(message)
-            threading.Thread(target=pending_job, daemon=True).start()
-            return
-
         if message:
             self.__footer = urwid.Pile([urwid.AttrWrap(urwid.Text(message, wrap='ellipsis'), "indicator"), self.__footer_keymap])
             self.indicate_tick = time.time()
@@ -105,7 +98,17 @@ class MainWindow:
             self.__footer = urwid.Pile([self.__footer_keymap])
         else:
             return  # Not changed
-        self.loop.set_alarm_in(0, lambda ctx, user_data: self.__view.set_footer(urwid.AttrWrap(self.__footer, 'footer')))
+        #self.loop.set_alarm_in(0, lambda ctx, user_data: self.__view.set_footer(urwid.AttrWrap(self.__footer, 'footer')))
+        self.add_job(self.__view.set_footer, (urwid.AttrWrap(self.__footer, 'footer'),))
+
+    def add_job(self, job, args=(), delay=0):
+        if not hasattr(self, 'loop'):
+            def pending_job(job, args, delay):
+                while not hasattr(self, 'loop'): time.sleep(0.001)
+                self.add_job(job, args, delay)
+            threading.Thread(target=pending_job, args=(job, args, delay), daemon=True).start()
+        else:
+            self.loop.set_alarm_in(delay, lambda ctx, user_data: job(*args))
 
     def push(self, page):
         page.hwnd = self
