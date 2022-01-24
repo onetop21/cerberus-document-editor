@@ -239,8 +239,8 @@ class EditorPage(ListPage):
                 if schema.get('type') == 'list':
                     self._config['root_type'] = 'list'
 
-        log('root schema:', list(self._config['root_schema'].keys()))
-        log('root type:', self._config['root_type'])
+            log('root schema:', list(self._config['root_schema'].keys()))
+            log('root type:', self._config['root_type'])
 
         # Prepare appendable items with hotkey
         if self.is_valuesrules:
