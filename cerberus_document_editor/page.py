@@ -1,6 +1,8 @@
 import urwid
 import json
+import time
 from abc import ABCMeta, abstractmethod
+from cerberus_kind.utils import parse_error
 
 from .validator import Validator
 from .widget import Widget, FlatButton
@@ -14,9 +16,11 @@ class Page(metaclass=ABCMeta):
     def __init__(self, name, hwnd=None, modal=False):
         self.__name = name
         self.__hwnd = hwnd
+        self.__modified = False
         self.__modal = modal
         self.__keymap = {}
         self.__data = {}
+        self.__warning_info = {'high_priority': False, 'latest_time': 0.0}
 
     @property
     def name(self):
@@ -29,6 +33,17 @@ class Page(metaclass=ABCMeta):
     @hwnd.setter
     def hwnd(self, hwnd):
         self.__hwnd = hwnd
+        if self.__modified:
+            self.__hwnd.modified()
+
+    @property
+    def is_modified(self):
+        return self.__modified
+    
+    def modified(self):
+        self.__modified = True
+        if self.__hwnd:
+            self.__hwnd.modified()
     
     @property
     def keymap(self):
@@ -40,7 +55,7 @@ class Page(metaclass=ABCMeta):
     
     @json.setter
     def json(self, data):
-        self.__data = data
+        self.__data.update(data)
 
     @property
     def is_modal(self):
@@ -71,10 +86,22 @@ class Page(metaclass=ABCMeta):
         self.__hwnd.pop()
 
     def render(self):
-        self.__hwnd.redraw()
+        if hasattr(self, '_page_widget'):
+            focus = self._page_widget.get_focus()
+            self.__hwnd.redraw()
+            self._page_widget.set_focus(min(len(self._page_widget.body)-1, focus[-1]))
+        else:
+            self.__hwnd.redraw()
 
-    def warning(self, message=None):
-        self.hwnd.set_indicator(message)
+    def warning(self, message=None, high_priority=False):
+        current_tick = time.time()
+        if self.__warning_info['high_priority']:
+            if self.__warning_info['latest_time'] + 0.1 < current_tick:
+                self.__warning_info['high_priority'] = False
+        if high_priority or not self.__warning_info['high_priority']:
+            self.hwnd.set_indicator(message)
+            self.__warning_info['latest_time'] = current_tick
+            self.__warning_info['high_priority'] = high_priority
 
     def on_change_focus(self):
         self.warning()
@@ -174,6 +201,18 @@ class ListPage(Page):
             _ = self._page_widget.get_focus_widgets()
             return _[-1]
 
+    def next_focus(self):
+         if hasattr(self, '_page_widget'):
+            max_index = len(self._page_widget.body)-1
+            pos = self._page_widget.get_focus()[-1]
+            self._page_widget.set_focus(max(0, min(max_index, pos+1)))
+
+    def prev_focus(self):
+         if hasattr(self, '_page_widget'):
+            max_index = len(self._page_widget.body)-1
+            pos = self._page_widget.get_focus()[-1]
+            self._page_widget.set_focus(max(0, min(max_index, pos-1)))
+
 class PopupPage(Page):
     def __init__(self, name, ptype='prompt', return_key='popup', **kwargs):
         super().__init__(name, modal=True)
@@ -195,10 +234,16 @@ class PopupPage(Page):
         elif ptype == 'select':
             self.items = kwargs.get('items', [])
             for item in self.items:
-                if isinstance(item, tuple):
-                    self.add_item(Widget.button(None, item[0], lambda x: self.on_select(x.label), colorschemes=('label', 'focus'), comment=item[1]))
+                if isinstance(item, dict):
+                    key = item
+                    desc = self.item.get(key)
                 else:
-                    self.add_item(Widget.button(None, item, lambda x: self.on_select(x.label), colorschemes=('label', 'focus')))
+                    key = item
+                    desc = None
+                if desc:
+                    self.add_item(Widget.button(None, key, lambda x: self.on_select(x.label), colorschemes=('label', 'focus'), comment=desc))
+                else:
+                    self.add_item(Widget.button(None, key, lambda x: self.on_select(x.label), colorschemes=('label', 'focus')))
         else:
             raise RuntimeError(f'Not Supported type. [{ptype}]')
 
@@ -245,19 +290,7 @@ class PopupPage(Page):
 
     def on_change(self, widget, new_value):
         if self.validator and not self.validator.validate({'value': new_value}):
-            def get_message(errors, stack=[]):
-                message = []
-                for error in errors:
-                    if isinstance(error, dict):
-                        for k, v in error.items():
-                            stack.append(k)
-                            message += get_message(v, stack)
-                            stack.pop(-1)
-                    elif isinstance(error, str):
-                        message.append(f"{error}")
-                        #message.append(f"{'.'.join(stack)}: {error}")
-                return message
-            error = ', '.join(get_message(self.validator.errors['__root__']))
+            error = parse_error(self.validator.errors, with_path=True)
             self.status_bar.set_text(error)
             self.block_close=True
         else:
