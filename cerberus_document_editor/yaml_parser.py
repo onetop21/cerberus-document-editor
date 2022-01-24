@@ -2,6 +2,7 @@ import os
 import io
 import re
 import yaml
+from collections import OrderedDict
 try:
     from yaml import CLoader as BaseLoader, CDumper as Dumper
 except ImportError:
@@ -42,13 +43,14 @@ def load(file):
         return stream
     def drop_recursive(data):
         _data = {}
-        for k, v in data.items():
-            if isinstance(v, dict):
-                v = drop_recursive(v)
-            if not k.startswith('x-'):
-                _data[k] = v
+        if isinstance(data, dict):
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    v = drop_recursive(v)
+                if not k.startswith('x-'):
+                    _data[k] = v
         return _data
     return drop_recursive(yaml.load(sub_load(file), Loader=Loader))
 
 def dump(doc):
-    return yaml.dump(doc, Dumper=Dumper, default_flow_style=False)
+    return yaml.dump(doc, Dumper=Dumper, default_flow_style=False, sort_keys=False)
