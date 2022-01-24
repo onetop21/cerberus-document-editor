@@ -7,7 +7,7 @@ from distutils.util import strtobool
 from cerberus_kind.utils import parse_error, kind_schema
 from cerberus_document_editor import yaml_parser
 from .validator import Validator
-from .widget import Widget, FlatButton
+from .widget import Widget, ComboBox
 from .page import ListPage, PopupPage
 from .debug import log
 
@@ -41,6 +41,15 @@ def callback_generator(ctx, name, schema, doc):
         )
         ctx.next(page)
     return callback
+
+def get_selector_info(document, schema):
+    allowed = [_.title() for _ in schema['selector']]
+    kind = document.get('kind', '').lower()
+    if not kind in schema['selector']:
+        allowed += [kind.title()]
+        kind = allowed[0].lower()
+    #schema = schema['selector'].get(kind)
+    return kind, allowed
 
 class EditorPage(ListPage):
     def __init__(self, name, schema, document, sub_page=False):
@@ -181,13 +190,23 @@ class EditorPage(ListPage):
             if self.json['document'] != document:
                 self.json = {"document": document}
                 self.modified()
-            self.render()
+            
+            REFRESH_WIDGETS = [ComboBox]
+            if type(widget) in REFRESH_WIDGETS:
+                self.render()
 
             # Update indicator for focusing item.
             if '__root__' in schema:
                 schema = schema['__root__']
                 if schema.get('selector'):
-                    schema = schema['selector'][document['kind'].lower()]
+                    # allowed = [_.title() for _ in schema['selector']]
+                    # kind = document.get('kind', '').lower()
+                    # if not kind in schema['selector']:
+                    #     allowed += [kind.title()]
+                    #     kind = allowed[0].lower()
+                    # schema = schema['selector'].get(kind)
+                    kind, _ = get_selector_info(document, schema)
+                    schema = schema['selector'].get(kind)
                 elif schema.get('valuesrules'):
                     schema = {key: schema['valuesrules'] for key in document}
                 elif schema.get('oneof'):
@@ -216,11 +235,12 @@ class EditorPage(ListPage):
             if schema.get('selector'):
                 # Selector 일 경우
                 self._config['root_type'] = 'selector'
-                allowed = [_.title() for _ in schema['selector']]
-                kind = doc.get('kind', "").lower()
-                if not kind in schema['selector']:
-                    allowed += [kind.title()]
-                    kind = allowed[0].lower()
+                # allowed = [_.title() for _ in schema['selector']]
+                # kind = doc.get('kind', "").lower()
+                # if not kind in schema['selector']:
+                #     allowed += [kind.title()]
+                #     kind = allowed[0].lower()
+                kind, allowed = get_selector_info(doc, schema)
                 schema = schema['selector'].get(kind)
                 schema['kind'] = kind_schema(kind, allowed)
                 log("** KIND ", schema['kind'])
