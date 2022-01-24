@@ -2,7 +2,6 @@ import os
 import io
 import re
 import yaml
-from collections import OrderedDict
 try:
     from yaml import CLoader as BaseLoader, CDumper as Dumper
 except ImportError:
