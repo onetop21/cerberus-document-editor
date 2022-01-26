@@ -86,12 +86,7 @@ class Page(metaclass=ABCMeta):
         self.__hwnd.pop()
 
     def render(self):
-        if hasattr(self, '_page_widget'):
-            focus = self._page_widget.get_focus()
-            self.__hwnd.redraw()
-            self._page_widget.set_focus(min(len(self._page_widget.body)-1, focus[-1]))
-        else:
-            self.__hwnd.redraw()
+        self.__hwnd.redraw()
 
     def warning(self, message=None, high_priority=False):
         current_tick = time.time()
@@ -183,18 +178,31 @@ class ListPage(Page):
         self.listbox_contents = []
 
     def on_draw(self):
+        focus_position = self.get_focus()
         if len(self.listbox_contents):
             walker = urwid.SimpleListWalker(self.listbox_contents)
             urwid.connect_signal(walker, 'modified', self.on_change_focus)
             self._page_widget = urwid.ListBox(walker)
-            return self._page_widget
+            container = self._page_widget
         else:
-            return urwid.Filler(
+            container = urwid.Filler(
                 urwid.Padding(
                     urwid.Text("Empty items.", align=urwid.CENTER),
                     align=urwid.CENTER
                 ), valign=urwid.MIDDLE
             )
+        self.set_focus(focus_position)
+        return container
+
+    def get_focus(self):
+        if hasattr(self, '_page_widget'):
+            _ = self._page_widget.get_focus()
+            return _[-1]
+        return 0
+
+    def set_focus(self, position):
+        if hasattr(self, '_page_widget'):
+            self._page_widget.set_focus(min(len(self._page_widget.body)-1, position))
 
     def get_focus_widget(self):
         if hasattr(self, '_page_widget'):

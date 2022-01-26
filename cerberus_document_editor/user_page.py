@@ -15,7 +15,7 @@ def BOOLEAN(x):
     return bool(strtobool(x))
 
 # Helper functions
-def ellipsis(text, max_w=60, max_h=10):
+def ellipsis(text, max_w=60, max_h=0):
     def cols(rows):
         output = []
         for row in rows:
@@ -25,7 +25,7 @@ def ellipsis(text, max_w=60, max_h=10):
                 output.append(row)
         return output
     rows = text.strip('\n').split('\n')
-    if len(rows) > max_h:
+    if max_h != 0 and len(rows) > max_h:
         return '\n'.join(cols(rows[:max_h-1]+['...']))
     else:
         return '\n'.join(cols(rows))
@@ -108,7 +108,6 @@ class EditorPage(ListPage):
                         body['document'][key] = None
                         self.json = body
                         self.modified()
-                        self.render()
             elif 'rename' in page.json:
                 if hasattr(self, '_last_key'):
                     last_key = getattr(self, '_last_key')
@@ -123,7 +122,6 @@ class EditorPage(ListPage):
                             )
                             self.json = body
                             self.modified()
-                            self.render()
             elif 'exit' in page.json:
                 key = page.json.get('exit')
                 if key.lower() == 'yes':
@@ -132,7 +130,6 @@ class EditorPage(ListPage):
                     self.hwnd.destroy(False)
                 elif key.lower() == 'cancel':
                     ...
-                self.render()
             else:
                 data = self.json
                 document = data['document']
@@ -145,7 +142,6 @@ class EditorPage(ListPage):
                 if self.json != data:
                     self.json = data
                     self.modified()
-                self.render()
 
     def on_change(self, widget, new_value):
         def casting(value):

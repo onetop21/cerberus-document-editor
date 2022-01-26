@@ -131,19 +131,27 @@ class MainWindow:
 
     def redraw(self):
         if len(self.stack) > 0:
-            page = self.stack[-1]
-            page.on_update()
-            self.__header_pagestack.contents = self.__header_pagestack_contents
-            self.__footer_keymap.contents = self.__footer_keymap_contents
-            self.set_pagestack()
-            self.__body.w = page.on_draw()
+            try:
+                page = self.stack[-1]
+                page.on_update()
+                self.__header_pagestack.contents = self.__header_pagestack_contents
+                self.__footer_keymap.contents = self.__footer_keymap_contents
+                self.set_pagestack()
+                self.__body.w = page.on_draw()
+            except:
+                self.stack.pop()
+                self.redraw()
+                self.set_indicator('Failed to draw document.')
 
     def input_handler(self, k):
         if len(self.stack):
             page = self.stack[-1]
             keymap = page.keymap
             if k in keymap:
-                keymap[k].callback(page)
+                try:
+                    keymap[k].callback(page)
+                except:
+                    self.set_indicator('Failed to handle input event.')
             elif k in ['ctrl x'] and not page.is_modal:
                 if not self.__modified or not self.stack[-1].on_close():
                     self.destroy()
