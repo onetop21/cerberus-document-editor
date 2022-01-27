@@ -117,6 +117,23 @@ class Page(metaclass=ABCMeta):
     def on_close(self):
         ...
 
+class LoopListBox(urwid.ListBox):
+    def keypress(self, size, key):
+        current_pos = self._get_focus_position()
+        max_pos = len(self.body)-1
+        # def actual_key(unhandled):
+        #     if unhandled:
+        #         return key
+        if self._command_map[key] == 'cursor up':
+            if current_pos == 0:
+                key='end'
+                #return actual_key(self._keypress_max_right(size))
+        elif self._command_map[key] == 'cursor down':
+            if current_pos == max_pos:
+                key='home'
+                #return actual_key(self._keypress_max_left(size))
+        return urwid.ListBox.keypress(self, size, key)
+
 class ListPage(Page):
     def __init__(self, name, sub_page=False):
         super().__init__(name)
@@ -182,7 +199,7 @@ class ListPage(Page):
         if len(self.listbox_contents):
             walker = urwid.SimpleListWalker(self.listbox_contents)
             urwid.connect_signal(walker, 'modified', self.on_change_focus)
-            self._page_widget = urwid.ListBox(walker)
+            self._page_widget = LoopListBox(walker)
             container = self._page_widget
         else:
             container = urwid.Filler(
