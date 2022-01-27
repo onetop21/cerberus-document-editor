@@ -3,6 +3,7 @@ import time
 import threading
 import urwid
 import json
+import traceback
 from interrupt_handler import InterruptHandler
 
 from .debug import log
@@ -138,10 +139,11 @@ class MainWindow:
                 self.__footer_keymap.contents = self.__footer_keymap_contents
                 self.set_pagestack()
                 self.__body.w = page.on_draw()
-            except:
+            except Exception as e:
                 self.stack.pop()
                 self.redraw()
                 self.set_indicator('Failed to draw document.')
+                log(traceback.format_exc())
 
     def input_handler(self, k):
         if len(self.stack):
@@ -150,8 +152,9 @@ class MainWindow:
             if k in keymap:
                 try:
                     keymap[k].callback(page)
-                except:
+                except Exception as e:
                     self.set_indicator('Failed to handle input event.')
+                    log(traceback.format_exc())
             elif k in ['ctrl x'] and not page.is_modal:
                 if not self.__modified or not self.stack[-1].on_close():
                     self.destroy()
