@@ -196,6 +196,10 @@ class ListPage(Page):
 
     def on_draw(self):
         focus_position = self.get_focus()
+        focus_key = self._page_widget._body[focus_position].original_widget.widget_list[0].w.text \
+            if hasattr(self, '_page_widget') else None
+            #log('on_draw', (self._page_widget._body[0].original_widget.widget_list[0].w.text))
+            #log('on_draw', dir(self._page_widget._body[0].original_widget.widget_list[0].w.text))
         if len(self.listbox_contents):
             walker = urwid.SimpleListWalker(self.listbox_contents)
             urwid.connect_signal(walker, 'modified', self.on_change_focus)
@@ -208,6 +212,11 @@ class ListPage(Page):
                     align=urwid.CENTER
                 ), valign=urwid.MIDDLE
             )
+        if focus_key:
+            for i, _ in enumerate(self._page_widget._body):
+                if focus_key == _.original_widget.widget_list[0].w.text:
+                    focus_position = i
+                    break
         self.set_focus(focus_position)
         return container
 
@@ -219,7 +228,14 @@ class ListPage(Page):
 
     def set_focus(self, position):
         if hasattr(self, '_page_widget'):
-            self._page_widget.set_focus(min(len(self._page_widget.body)-1, position))
+            maxlen = len(self._page_widget._body)
+            position = max(0, min(maxlen-1, position))
+            while not self._page_widget._body[position].selectable() and position < maxlen:
+                position += 1
+            position = max(0, min(maxlen-1, position))
+            while not self._page_widget._body[position].selectable() and position > 0:
+                position -= 1
+            self._page_widget.set_focus(position)
 
     def get_focus_widget(self):
         if hasattr(self, '_page_widget'):

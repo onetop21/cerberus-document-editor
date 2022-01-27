@@ -106,6 +106,7 @@ class EditorPage(ListPage):
                         self.warning('Already exist key.')
                     else:
                         body['document'][key] = None
+                        body['document'] = self.validator.normalized(body['document'], ordered=True)
                         self.json = body
                         self.modified()
             elif 'rename' in page.json:
