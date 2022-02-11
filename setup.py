@@ -25,7 +25,7 @@ def main():
       zip_safe=False,
       python_requires='>=3.0',
       install_requires=[
-          "cerberus-kind>=0.0.16,<1.0.0",
+          "cerberus-kind>=0.0.17,<1.0.0",
           "PyYAML>=5.4.1,<6.0.0",
           "urwid>=2.1.2,<3.0.0",
           "InterruptHandler>=0.0.4,<1.0.0"

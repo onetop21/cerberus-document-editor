@@ -5,4 +5,4 @@ try:
 except Exception as e:
     print(e, file=sys.stderr)
     ...
-__version__ = '0.0.7'
+__version__ = '0.0.8'
