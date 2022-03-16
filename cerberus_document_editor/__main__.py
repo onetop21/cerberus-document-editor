@@ -35,12 +35,15 @@ def main():
         exit_with_message('Not support document file type.')
     if os.path.exists(args.document):
         with open(args.document) as f:
-            if doc_ext.lower() in ['.yaml', '.yml']:
-                document = yaml_parser.load(f)
-            elif doc_ext.lower() == '.json':
-                document = json.load(f)
-            else:
-                exit_with_message('Cannot support schema file type.')
+            try:
+                if doc_ext.lower() in ['.yaml', '.yml']:
+                    document = yaml_parser.load(f)
+                elif doc_ext.lower() == '.json':
+                    document = json.load(f)
+                else:
+                    exit_with_message('Cannot support schema file type.')
+            except:
+                exit_with_message("Failed to load file. (ParseError)")
     else:
         document = {}
 
